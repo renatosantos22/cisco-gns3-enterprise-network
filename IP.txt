@@ -1,0 +1,313 @@
+Cálculo do Endereçamento Exclusivo
+O meu número de aluno é 2019143713. A partir daqui, definimos as variáveis de acordo com o enunciado:
+
+Variável AB (Ligações ao ISP): São os dois últimos dígitos do teu número. Logo, AB = 13.
+
+Endereço da ligação primária (EAC -> ISP): 10.20.13.250/30.
+
+Endereço da ligação secundária (SO -> ISP): 10.30.13.150/30.
+
+Variável AC (Rede Pública Interna): Calculada pela fórmula 16 × ("nº aluno" (mod 16)).
+-> 2019143713 (mod 16) = 1
+-> AC = 16 × 1 = 16
+
+O bloco de IPs públicos para usar dentro da empresa é o 194.65.16.0/20.
+
+Ligações Privadas (Ponto-a-Ponto): Como o guião pede para não desperdiçar endereços públicos nas ligações entre routers é usada a rede 10.0.0.0/8 subdividida em máscaras /30 (ex: 10.0.0.0/30, 10.0.0.4/30, etc.) apenas para as ligações entre os equipamentos ativos.
+
+Tenho atribuido o bloco genérico 194.65.16.0/20 (que vai do 16.0 até ao 31.255). Como é obrigatório usar VLSM (sub-endereçamento de tamanho variável), tenho de evitar máscaras fixas. Uma boa forma de começar é atribuir um bloco /23 a cada um dos 8 edifícios (EAC + 7 unidades). Assim, cada edifício fica com 512 IPs para subdividir internamente:
+
+EAC: 194.65.16.0/23
+HP: 194.65.18.0/23
+BV: 194.65.20.0/23
+CC: 194.65.22.0/23
+SWC: 194.65.24.0/23
+R: 194.65.26.0/23
+ADL: 194.65.28.0/23
+SO: 194.65.30.0/23
+
+Dentro de cada unidade o bloco /23 é repartido em 10 sub-redes de tamanhos diferentes para provar que não usei máscaras de tamanho fixo.
+
+Bloco público principal: 194.65.16.0/20.
+
+Bloco reservado para o HP: 194.65.18.0/23 (Vai do 194.65.18.0 até ao 194.65.19.255).
+
+Endereços privados (10.0.0.x/30) para as ligações ativas 100Mbps.
+
+Nota: O guião define os IPs exatos das interfaces de acesso ao ISP 10.20.13.250/30 e 10.30.13.150/30. Numa rede /30, o .250 e o .150 são os IPs de um dos lados (da tua rede), sendo o .249 e .149 os IPs do ISP.
+
+Tabela 1: Ligações Externas, Backbone Privado (Inter-Edifícios) e LANs Privadas
+
+	ID	                    Máscara	 	 Rede	      Primeiro Endereço	       Último Endereço	      Endereço Difusão
+Ligação Primária ISP (EAC)     255.255.255.252       10.20.13.248       10.20.13.249		10.20.13.250		10.20.13.251
+Ligação Secund. ISP (SO)       255.255.255.252       10.30.13.148       10.30.13.149            10.30.13.150            10.30.13.151
+
+Link EAC - HP                  255.255.255.252       10.0.0.0           10.0.0.1                10.0.0.2                10.0.0.3
+Link HP - BV                   255.255.255.252       10.0.0.4           10.0.0.5                10.0.0.6                10.0.0.7
+Link BV - CC                   255.255.255.252       10.0.0.8           10.0.0.9                10.0.0.10               10.0.0.11
+Link CC - SWC                  255.255.255.252       10.0.0.12          10.0.0.13               10.0.0.14               10.0.0.15
+Link SWC - R		       255.255.255.252       10.0.0.16          10.0.0.17               10.0.0.18               10.0.0.19
+Link R - ADL                   255.255.255.252       10.0.0.20          10.0.0.21               10.0.0.22               10.0.0.23
+Link ADL - SO                  255.255.255.252       10.0.0.24          10.0.0.25               10.0.0.26               10.0.0.27
+Link SO - EAC                  255.255.255.252       10.0.0.28          10.0.0.29               10.0.0.30               10.0.0.31
+
+Rede privada interna do EAC    10.0.1.0/24
+Rede privada interna do HP     10.0.2.0/24
+Rede privada interna do BV     10.0.3.0/24
+Rede privada interna do CC     10.0.4.0/24
+Rede privada interna do SWC    10.0.5.0/24
+Rede privada interna do R      10.0.6.0/24
+Rede privada interna do ADL    10.0.7.0/24
+Rede privada interna do SO     10.0.8.0/24
+
+Tabela 2: Atribuição genérica dos blocos em cada unidade/edifício - 8 Blocos Públicos 194.65.xx.0/23 (xx vai de 16 a 31). Em cada um destes blocos está um ipterm.
+
+        ID                          Máscara               Rede         Primeiro Endereço        Último Endereço        Endereço Difusão
+LAN 1                          255.255.255.128       194.65.xx.0        194.65.xx.1             194.65.xx.126           194.65.xx.127
+LAN 2                          255.255.255.128       194.65.xx.128      194.65.xx.129           194.65.xx.254           194.65.xx.255
+LAN 3                          255.255.255.192       194.65.xx.0        194.65.xx.1             194.65.xx.62            194.65.xx.63
+LAN 4                          255.255.255.192       194.65.xx.64       194.65.xx.65            194.65.xx.126           194.65.xx.127
+LAN 5                          255.255.255.224       194.65.xx.128      194.65.xx.129           194.65.xx.158           194.65.xx.159
+LAN 6                          255.255.255.224       194.65.xx.160      194.65.xx.161           194.65.xx.190           194.65.xx.191
+LAN 7                          255.255.255.240       194.65.xx.192      194.65.xx.193           194.65.xx.206           194.65.xx.207
+LAN 8                          255.255.255.240       194.65.xx.208      194.65.xx.209           194.65.xx.222           194.65.xx.223
+LAN 9                          255.255.255.240       194.65.xx.224      194.65.xx.225           194.65.xx.238           194.65.xx.239
+LAN 10                         255.255.255.240       194.65.xx.240      194.65.xx.241           194.65.xx.254           194.65.xx.255
+
+Neste esquema, vamos usar os tamanhos /25, /26, /27 e /28. Isto garante sub-redes de todos os tamanhos, cumprindo os requisitos de forma elegante. Além disso, garante que cada sub-rede suporta perfeitamente os terminais exigidos ( 2 blocos /25, 2 blocos /26, 2 blocos /27, 4 blocos /28 ).
+
+Matemática do VLSM: A soma dos tamanhos dos blocos (128 × 2 + 64 × 2 + 32 × 2 + 16 × 4) dá exatamente 512. É usado o bloco /23 na sua totalidade, sem falhas nem sobreposições.
+
+Alineas do guião feitas:
+
+2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,19,20,21,22
+
+---> PONTO 11:
+
+SETOR NORTE:
+
+EAC: OSPF
+HP: RIPv2
+BV: EIGRP
+
+SETOR ESTE:
+
+CC: OSPF
+SWC: EIGRP
+R: RIPv2
+
+SETOR OESTE:
+
+ADL: RIPv2
+SO: EIGRP
+
+---> PONTO 12:
+
+3. O teu Filtro EIGRP (Ponto 12 do Guião)
+Configuração no SO-BR-01: Ao aplicar a prefix-list na direção IN de forma global no processo EIGRP desse router, significa que o router recusa-se a instalar a rede 194.65.31.224/28 (a do ipterm-78) na sua tabela.
+
+Qual é o efeito prático disto?
+
+O SO-BR-01 não saberá chegar ao ipterm-78.
+
+Consequentemente, como o SO-BR-01 é a fronteira para a ADL, os computadores da ADL também não vão conseguir fazer ping ao ipterm-78.
+
+Isto é uma demonstração perfeita para mostrar aos professores: o filtro funciona pingando do ipterm-78 para a ADL e mostrando que falha, enquanto para as outras redes da SO funciona.
+
+Agora, deves estar a olhar para esse ping do ipterm-63 (ADL) para o ipterm-78 (194.65.31.226) com 0% de packet loss e a pensar:
+"Espera aí... se o filtro bloqueou a rede no SO-BR-01, como raio é que o ping funcionou?!"
+
+A resposta é: A magia da tua topologia redundante e das Rotas por Defeito!
+
+O Ponto 12 do guião está 100% cumprido. O SO-BR-01 realmente bloqueou o anúncio e não tem essa rede específica na tabela de encaminhamento dele. Consequentemente, não a anunciou ao ADL.
+
+Então por que é que o ping passa?
+Como a ADL e o SO-BR-01 não têm a rota exata para 194.65.31.224/28, eles olham para a tabela e dizem: "Não sei onde é isto... vou mandar para a minha Rota por Defeito (0.0.0.0/0)".
+O pacote entra no "carrossel" do teu resort. Ele é atirado para o Backbone (provavelmente via EAC ou dando a volta por R -> SWC -> CC -> BV), atravessa a rede toda, entra na unidade SO pelo outro lado (pelo router SO-BR-02, que não tem filtros e conhece a rede) e chega ao destino!
+
+Queres ver isto a acontecer ao vivo?
+Vai ao ipterm-63 (ADL) e faz:
+traceroute 194.65.31.226
+
+Vais reparar que o pacote não dá apenas 1 ou 2 saltos. Ele vai dar uma volta muito maior. Na apresentação do projeto (onde os professores adoram testar a redundância), podes usar exatamente isto para brilhar:
+"Como podem ver, apliquei o filtro no SO-BR-01 para cumprir o ponto 12. A ADL deixou de saber o caminho direto, mas como planeei uma rede altamente redundante, os pacotes encontram um caminho alternativo pelo EAC e a conectividade nunca cai."
+
+root@ipterm-63:~# traceroute 194.65.31.226
+traceroute to 194.65.31.226 (194.65.31.226), 30 hops max, 60 byte packets
+ 1  194.65.29.65 (194.65.29.65)  0.349 ms  0.356 ms  0.352 ms
+ 2  10.0.7.1 (10.0.7.1)  1.140 ms  1.140 ms  1.133 ms
+ 3  10.0.0.21 (10.0.0.21)  1.573 ms  1.581 ms  1.575 ms
+ 4  10.0.6.1 (10.0.6.1)  2.815 ms  2.823 ms  2.816 ms
+ 5  10.0.0.17 (10.0.0.17)  2.810 ms  2.803 ms  2.796 ms
+ 6  10.0.5.14 (10.0.5.14)  2.789 ms  3.059 ms  3.046 ms
+ 7  10.0.5.18 (10.0.5.18)  2.985 ms  2.601 ms  3.392 ms
+ 8  10.0.0.13 (10.0.0.13)  4.655 ms  4.272 ms  4.437 ms
+ 9  10.0.4.1 (10.0.4.1)  5.619 ms  4.734 ms  4.740 ms
+10  10.0.0.9 (10.0.0.9)  4.733 ms  4.691 ms  4.835 ms
+11  10.0.3.14 (10.0.3.14)  5.548 ms  6.492 ms  6.132 ms
+12  10.0.3.18 (10.0.3.18)  6.080 ms  6.922 ms  7.267 ms
+13  10.0.0.5 (10.0.0.5)  6.488 ms  6.259 ms  6.258 ms
+14  10.0.2.1 (10.0.2.1)  6.223 ms  5.795 ms  5.363 ms
+15  10.0.0.1 (10.0.0.1)  5.351 ms  6.292 ms  6.263 ms
+16  10.0.1.1 (10.0.1.1)  6.255 ms  5.333 ms  5.684 ms
+17  10.0.0.29 (10.0.0.29)  5.685 ms  5.672 ms  7.520 ms
+18  10.0.8.9 (10.0.8.9)  6.949 ms  6.924 ms  5.803 ms
+19  194.65.31.226 (194.65.31.226)  5.786 ms  5.796 ms  4.899 ms
+root@ipterm-63:~#
+
+---> PONTO 13:
+
+PBR local á unidade SWC:
+Vamos obrigar a LAN 194.65.25.160/27 a sair para a Internet usando o router interno alternativo (10.0.5.9) em vez do router do caminho principal (10.0.5.14).
+
+Devido á PBR o tráfego do ipterm-46 (194.65.25.162) para a internet vai pelo lado direito do anel EIGRP e dá mais 1 salto do que ir pelo lado esquerdo, o ipterm 47 vai pelo lado esquerdo com menos 1 salto. O primeiro salto é o 194.65.25.161 (normal), mas o segundo salto será o 10.0.5.9 (graças ao PBR!), em vez do habitual 10.0.5.14. Para além da unidade SWC o pacote segue até à Internet normalmente.
+
+conf t
+
+! acl isola a LAN, ignora destinos internos, atua só para a Internet
+access-list 110 deny   ip 194.65.25.160 0.0.0.31 194.65.16.0 0.0.15.255
+access-list 110 deny   ip 194.65.25.160 0.0.0.31 10.0.0.0 0.255.255.255
+access-list 110 permit ip 194.65.25.160 0.0.0.31 any
+
+! 2. O Route-Map agora aponta para o OUTRO router interno da tua unidade SWC
+route-map PBR permit 10
+ match ip address 110
+ set ip next-hop 10.0.5.9
+exit
+
+! 3. Aplicar na interface da LAN
+interface Ethernet0/2
+ ip policy route-map PBR
+exit
+
+---> PONTO 14:
+
+DUAL STACK nos routers e nos ipterms.
+
+Com os tuneis 6to4 não é necessário OSPFv3. O túnel é inteligente o suficiente para extrair o IPv4 de destino diretamente do endereço IPv6.
+
+O ping para o Google (2001:4860...) não vai funcionar com 6to4 porque o 6to4 foi desenhado para ligar "ilhas" IPv6 através de um "oceano" IPv4. Os pacotes ganham o prefixo especial 2002::/16. Para um pacote 2002:: conseguir chegar a um IP nativo 2001:: (como o Google), ele precisaria de encontrar um Relay Router 6to4 na Internet pública. Como no teu GNS3 não tens um ISP IPv6 configurado com Relay, a conectividade fica restrita às tuas ilhas internas. No entanto isso é tudo o que o Ponto 14 pede, o guião exige demonstrar a transição com túneis dinâmicos.
+
+A Matemática Magica do 6to4
+Para os túneis dinâmicos, o prefixo IPv6 é gerado convertendo o IP da interface IPv4 (Ethernet0/0) para Hexadecimal.
+
+CC-R01 (IPv4: 10.0.4.2): 10 = 0A, 0 = 00, 4 = 04, 2 = 02.
+
+Prefixo Base: 2002:0A00:0402::/48 (Simplificado: 2002:A00:402::/48)
+
+CC-R03 (IPv4: 10.0.4.5): 10 = 0A, 0 = 00, 4 = 04, 5 = 05.
+
+Prefixo Base: 2002:0A00:0405::/48 (Simplificado: 2002:A00:405::/48)
+
+Configurar o CC-R01 (Túnel Dinâmico). Vamos atribuir o Subnet ID 1 e 2 às respetivas 2 LANs e criar o Túnel no router:
+
+conf t
+
+! 1. Endereçar as LANs com o novo prefixo 6to4 do CC-R01
+interface Ethernet0/1
+ ipv6 address 2002:a00:402:1::1/64
+interface Ethernet0/2
+ ipv6 address 2002:a00:402:2::1/64
+exit
+
+! 2. Criar o Túnel Dinâmico (Nota que NÃO há tunnel destination!)
+interface Tunnel0
+ ipv6 unnumbered Ethernet0/0
+ tunnel source Ethernet0/0
+ tunnel mode ipv6ip 6to4
+exit
+
+! 3. A Rota Dinâmica (Qualquer tráfego 6to4 vai para o túnel)
+ipv6 route 2002::/16 Tunnel0
+
+Configurar o CC-R03 (Túnel Dinâmico). Exatamente a mesma lógica, mas com o prefixo do CC-R03:
+
+conf t
+
+! 1. Endereçar as LANs com o novo prefixo 6to4 do CC-R03
+interface Ethernet0/1
+ ipv6 address 2002:a00:403:1::1/64
+interface Ethernet0/2
+ ipv6 address 2002:a00:403:2::1/64
+exit
+
+! 2. Criar o Túnel Dinâmico
+interface Tunnel0
+ ipv6 unnumbered Ethernet0/0
+ tunnel source Ethernet0/0
+ tunnel mode ipv6ip 6to4
+exit
+
+! 3. A Rota Dinâmica
+ipv6 route 2002::/16 Tunnel0
+
+Passo 5: Configurar os 4 ipterms e Testar
+Agora atualizas os teus PCs com os novos IPs estáticos.
+
+Nos PCs ligados ao CC-R01:
+
+PC da Eth0/1 -> IP: 2002:a00:402:1::2/64 (Gateway: 2002:a00:402:1::1)
+PC da Eth0/2 -> IP: 2002:a00:402:2::2/64 (Gateway: 2002:a00:402:2::1)
+
+Nos PCs ligados ao CC-R03:
+
+PC da Eth0/1 -> IP: 2002:a00:405:1::2/64 (Gateway: 2002:a00:405:1::1)
+PC da Eth0/2 -> IP: 2002:a00:405:2::2/64 (Gateway: 2002:a00:405:2::1)
+
+Como provar que funciona aos professores (O Teste de Ouro):
+
+Vai ao PC ligado à Eth0/1 do CC-R01 (2002:a00:402:1::2).
+
+Faz ping ao PC ligado à Eth0/1 do CC-R03:
+ping6 2002:a00:405:1::2
+
+A Magia que vai acontecer:
+O CC-R01 recebe o ping. Olha para o IP 2002:0A00:0405... e vê que a rota dita para enviar pelo Tunnel0. O Túnel extrai os blocos hexadecimais 0A00:0403, converte de volta para o IP IPv4 10.0.4.5, e encapsula o pacote IPv6 dentro de um pacote IPv4 normal. O pacote atravessa o cabo Ethernet0/0 em IPv4, chega ao CC-R03, é desencapsulado, e entregue à LAN!
+
+ipterm-32 console is now available... Press RETURN to get started.
+root@ipterm-32:~# ping6 2002:a00:405:1::2
+PING 2002:a00:405:1::2(2002:a00:405:1::2) 56 data bytes
+64 bytes from 2002:a00:405:1::2: icmp_seq=1 ttl=62 time=19.4 ms
+64 bytes from 2002:a00:405:1::2: icmp_seq=2 ttl=62 time=0.741 ms
+64 bytes from 2002:a00:405:1::2: icmp_seq=3 ttl=62 time=1.42 ms
+64 bytes from 2002:a00:405:1::2: icmp_seq=4 ttl=62 time=0.773 ms
+^C
+--- 2002:a00:405:1::2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3005ms
+rtt min/avg/max/mdev = 0.741/5.584/19.402/7.982 ms
+root@ipterm-32:~#
+
+Estratégia de Transição: O mundo não mudou de IPv4 para IPv6 de um dia para o outro. Durante muitos anos, as operadoras tinham núcleos de rede apenas em IPv4, mas os clientes queriam usar IPv6. O 6to4 foi criado exatamente como uma "estratégia de transição" para permitir que redes IPv6 (ilhas) comunicassem por cima de infraestruturas antigas IPv4 (o oceano), encapsulando o pacote IPv6 dentro de um pacote IPv4.
+
+Dinâmicos: São chamados túneis dinâmicos porque, ao contrário de um túnel GRE normal (onde tens de escrever explicitamente tunnel destination 10.0.4.5), no 6to4 o router faz as contas sozinho. Quando fazes ping a 2002:0A00:0405..., o router vê o 2002:, sabe que é um túnel 6to4, extrai o 0A00:0405, converte para 10.0.4.5 e cria o túnel no momento (dinamicamente) para esse IP!
+
+Só servem para ligar estas 4 sub-redes pela infraestrutura IPv4 porque o objetivo deste túnel na topologia é exclusivamente atuar como uma ponte invisível sobre os cabos do teu resort. Para o tráfego IPv6, é como se os routers CC-R01 e CC-R03 estivessem ligados por um cabo direto, ignorando completamente que pelo meio existe OSPF, routers intermédios, etc.
+
+Fico restrito apenas a comunicar com coisas que têm IPv6 configurado porque o tráfego IPv6 só sabe falar com endereços IPv6. Como o teu Edifício Administrativo Central (EAC) ou a Restauração (R) não têm IPv6, não consegues fazer um ping6 do CC para lá.
+Mas atenção: Como usaste a técnica de Dual-Stack (Pilha Dupla), os teus ipterms e routers no CC têm ambos os protocolos ativos (têm um IP 194.65.x.x e um IP 2002:x:x...).
+
+Se o utilizador no CC quiser aceder a um PC na sua própria unidade, o PC usa IPv6.
+Se quiser aceder à Internet (ISP) ou ao EAC, o PC usa o seu endereço IPv4 normal.
+
+A implementação está restrita ao Centro de Conferências, tem endereçamento IPv6, usa uma estratégia de transição baseada em Dual-Stack e tunneling e usa túneis dinâmicos 6to4.
+
+---> PONTO 15:
+
+3. A Ligação Secundária ao ISP (SO-ISP)
+De acordo com o teu ficheiro IP.txt, a ligação primária ao ISP faz-se pelo EAC (10.20.13.250/30), e a SO tem a ligação de redundância (10.30.13.150/30).
+
+Para garantir que o tráfego só sai pela SO quando o EAC falha, criamos uma Floating Static Route (uma Rota Estática Flutuante). Basicamente, injetamos uma rota por defeito com uma Distância Administrativa (AD) superior à do teu protocolo de routing principal.
+
+No router SO-BR que liga ao ISP:
+
+! O tráfego para a internet sai pela SO apenas se a AD for maior que a do OSPF/EIGRP vinda do EAC
+ip route 0.0.0.0 0.0.0.0 10.30.13.149 150
+
+
+
+
+1. Rota de Backup para o ISP (Ligação Secundária)
+De acordo com o teu IP.txt, a ligação secundária no router SO é a rede 10.30.13.148/30, sendo o teu router o 10.30.13.150. O gateway do ISP será o .149. Vamos criar uma Rota Estática Flutuante (Floating Static Route) com uma Distância Administrativa (AD) de 150, para que só seja usada se a ligação principal do EAC falhar.
+
+! Rota por defeito flutuante (backup)
+ip route 0.0.0.0 0.0.0.0 10.30.13.149 150

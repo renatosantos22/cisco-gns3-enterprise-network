@@ -1,0 +1,33 @@
+conf t
+
+no ip domain-lookup
+
+no service config
+
+no ip source-route
+
+no ip bootp server
+
+no ip http server
+
+no ip http secure-server
+
+no lldp run
+
+no cdp run
+
+hostname Router_EAC_1
+
+banner motd # Sistema Router_EAC_1 #
+
+line vty 0
+password cisco
+login
+transport input telnet
+
+exit
+
+service password-encryption
+
+end
+write memory
